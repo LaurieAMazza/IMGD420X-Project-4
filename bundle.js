@@ -3385,12 +3385,16 @@ var createShader = require('gl-shader')
 
 var draw = glslify(["#ifdef GL_ES\nprecision mediump float;\n#define GLSLIFY 1\n#endif\n\nuniform sampler2D state;\nuniform vec2 resolution;\n\nvoid main() {\n  gl_FragColor = vec4( texture2D( state, gl_FragCoord.xy / resolution ).rgb, 1. );\n}"]),
     vert = glslify(["precision mediump float;\n#define GLSLIFY 1\nattribute vec2 a_position;\n\nvoid main() {\n  gl_Position = vec4( a_position, 0., 1. );\n}"]),
-    gol  = glslify(["//referenced https://0fps.net/2012/11/19/conways-game-of-life-for-curved-surfaces-part-1/\n#ifdef GL_ES\nprecision mediump float;\n#define GLSLIFY 1\n#endif\n\nuniform vec2 resolution;\n\n// simulation texture state, swapped each frame\nuniform sampler2D state;\n\nuniform float time;\n\nconst float PI = 3.14159;\n\n//Radius\nconst float iRadius = 1.0;\nconst float oRadius = 3.0 * iRadius;\n//Area\nfloat iArea = PI * iRadius * iRadius;\nfloat oArea = PI * (oRadius * oRadius - iRadius * iRadius);\n\n//Birth\nfloat Bmax = 0.335;\nfloat Bmin = 0.2;\n\n//Death\nfloat Dmax = 0.445;\nfloat Dmin = 0.367;\n\n//different alphas for different steps\nfloat alpha_n = 0.03;\nfloat alpha_m = 0.5;\n\n//rim of width\nfloat b = 1.0;\n\n// look up individual cell values\nfloat get(float x, float y) {\n  return texture2D( state, (vec2(gl_FragCoord.xy) + vec2(x,y)) / resolution).r;\n}\n\n//equations taken from https://arxiv.org/pdf/1111.1567.pdf\n//Sigmoid functions\nfloat sigmoid1(float x, float a, float alpha){\n    return 1.0 / (1.0 + exp(-(x - a) * 4. / alpha));\n}\n\nfloat sigmoid2(float x, float a, float b){\n    return sigmoid1(x, a, alpha_n) * (1.0 - sigmoid1(x, b, alpha_n));\n}\n\nfloat sigmoidM(float x, float y, float m){\n    return x * (1.0 - sigmoid1(m, 0.5, alpha_m)) + y * sigmoid1(m, 0.5, alpha_m);\n}\n\n//transition function\nfloat s(float n, float m){\n    return sigmoid2(n, sigmoidM(Bmin, Dmin, m), sigmoidM(Bmax, Dmax, m));\n}\n\nvoid main() {\n  float inner = 0.0, outer = 0.0;\n\n//go through every point within the radius\n  for(float i = -oRadius; i <= oRadius; i++){\n    for(float j = -oRadius; j <= oRadius; j++){\n        float l = sqrt(j * j + i * i);\n        float fval = get(i, j);\n\n        //Inner circle\n        if(l < iRadius - b/2.0){\n            //take value as is\n            inner += fval;\n        } else if(l > iRadius + b/2.0){\n            //take 0\n            //inner += 0.02;\n        } else{\n            //The in between\n            inner += fval * (iRadius + b/2.0 - l);\n        }\n\n        //check if inside the outer\n        if(l < oRadius){\n            //outer\n            if(l < iRadius - b/2.0){\n                //take value as is\n                outer += fval;\n            } else if (l > iRadius + b/2.0){\n                //take 0\n                //outer += 0.02;\n            } else{\n                //The in between\n                outer += fval * (iRadius + b/2.0 - l);\n            }\n        }\n    }\n  }\n\n  //Normalize\n  float m = inner;\n  float n = outer;\n\n  float r = s(n, m) * 100000. + tan(time);\n  float g = s(n, m) * 100000. + (1.0 - cos(time));\n  float b = 1.0 - sin(g)/ sin(time);\n\n   gl_FragColor = vec4(sin(r), sin(g), b, 1.);\n\n  //gl_FragColor = vec4(0., 1., 0.,1.);\n}"])
+    gol  = glslify(["//referenced https://0fps.net/2012/11/19/conways-game-of-life-for-curved-surfaces-part-1/\n#ifdef GL_ES\nprecision mediump float;\n#define GLSLIFY 1\n#endif\n\nuniform vec2 resolution;\n\n// simulation texture state, swapped each frame\nuniform sampler2D state;\n\nuniform float time;\n\nuniform float red;\nuniform float green;\nuniform float blue;\n\nconst float PI = 3.14159;\n\n//Radius\nconst float iRadius = 1.0;\nconst float oRadius = 3.0 * iRadius;\n//Area\nfloat iArea = PI * iRadius * iRadius;\nfloat oArea = PI * (oRadius * oRadius - iRadius * iRadius);\n\n//Birth\nfloat Bmax = 0.335;\nfloat Bmin = 0.22;\n\n//Death\nfloat Dmax = 0.445;\nfloat Dmin = 0.267;\n\n//different alphas for different steps\nfloat alpha_n = 0.03;\nfloat alpha_m = 0.05;\n\n//rim of width\nfloat b = 1.0;\n\n// look up individual cell values\nfloat get(float x, float y) {\n  return texture2D( state, (vec2(gl_FragCoord.xy) + vec2(x,y)) / resolution).r;\n}\n\n//equations taken from https://arxiv.org/pdf/1111.1567.pdf\n//Sigmoid functions\nfloat sigmoid1(float x, float a, float alpha){\n    return 1.0 / (1.0 + exp(-(x - a) * 4. / alpha));\n}\n\nfloat sigmoid2(float x, float a, float b){\n    return sigmoid1(x, a, alpha_n) * (1.0 - sigmoid1(x, b, alpha_n));\n}\n\nfloat sigmoidM(float x, float y, float m){\n    return x * (1.0 - sigmoid1(m, 0.5, alpha_m)) + y * sigmoid1(m, 0.5, alpha_m);\n}\n\n//transition function\nfloat s(float n, float m){\n    return sigmoid2(n, sigmoidM(Bmin, Dmin, m), sigmoidM(Bmax, Dmax, m));\n}\n\nvoid main() {\n  float inner = 0.0, outer = 0.0;\n\n//go through every point within the radius\n  for(float i = -oRadius; i <= oRadius; i++){\n    for(float j = -oRadius; j <= oRadius; j++){\n        float l = sqrt(j * j + i * i);\n        float fval = get(i, j);\n\n        //Inner circle\n        if(l < iRadius - b/2.0){\n            //take value as is\n            inner += fval;\n        } else if(l > iRadius + b/2.0){\n            //take 0\n            //inner += 0.02;\n        } else{\n            //The in between\n            inner += fval * (iRadius + b/2.0 - l);\n        }\n\n        //check if inside the outer\n        if(l < oRadius){\n            //outer\n            if(l < iRadius - b/2.0){\n                //take value as is\n                outer += fval;\n            } else if (l > iRadius + b/2.0){\n                //take 0\n                //outer += 0.02;\n            } else{\n                //The in between\n                outer += fval * (iRadius + b/2.0 - l);\n            }\n        }\n    }\n  }\n\n  //Normalize\n  float m = inner;\n  float n = outer;\n\n  float r = s(n, m) * 100000. + tan(time);\n  float g = s(n, m) * 100000. + (1.0 - cos(time));\n  float b = s(n, m) * 100000.;\n\n   gl_FragColor = vec4(sin(r) * red, sin(g) * green, sin(b) * blue, 1.);\n\n  //gl_FragColor = vec4(0., 1., 0.,1.);\n}"])
 
-//var simShader = glslify({frag: gol, vert: vert})
-//var drawShader = glslify({frag: draw, vert: vert})
 
-var dShader, upShader, state, current = 0, time = 0
+var dShader, upShader, state, current = 0, time = 0, guivar
+
+var guiVars = function(){
+    this.red = 1.5;
+    this.green = 1.5;
+    this.blue = 1.5;
+}
 
 shell.on("gl-init", function () {
     var gl = shell.gl
@@ -3418,6 +3422,12 @@ shell.on("gl-init", function () {
 
     //Set up vertex pointers
     dShader.attributes.a_position.location = upShader.attributes.a_position.location = 0
+
+    guivar = new guiVars();
+    var gui = new dat.GUI();
+    gui.add(guivar, 'red', 1.0, 2.0)
+    gui.add(guivar, 'green', 1.0, 2.0)
+    gui.add(guivar, 'blue', 0.5, 2.0)
 })
 
 shell.on("tick", function() {
@@ -3430,6 +3440,9 @@ shell.on("tick", function() {
     upShader.bind()
     upShader.uniforms.state = prevState.color[0].bind()
     upShader.uniforms.resolution = prevState.shape
+    upShader.uniforms.red = guivar.red
+    upShader.uniforms.green = guivar.green
+    upShader.uniforms.blue = guivar.blue
     console.log(current)
 
     fillScreen(gl)

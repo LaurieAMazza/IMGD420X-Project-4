@@ -10,6 +10,10 @@ uniform sampler2D state;
 
 uniform float time;
 
+uniform float red;
+uniform float green;
+uniform float blue;
+
 const float PI = 3.14159;
 
 //Radius
@@ -21,15 +25,15 @@ float oArea = PI * (oRadius * oRadius - iRadius * iRadius);
 
 //Birth
 float Bmax = 0.335;
-float Bmin = 0.2;
+float Bmin = 0.22;
 
 //Death
 float Dmax = 0.445;
-float Dmin = 0.367;
+float Dmin = 0.267;
 
 //different alphas for different steps
 float alpha_n = 0.03;
-float alpha_m = 0.5;
+float alpha_m = 0.05;
 
 //rim of width
 float b = 1.0;
@@ -102,9 +106,9 @@ void main() {
 
   float r = s(n, m) * 100000. + tan(time);
   float g = s(n, m) * 100000. + (1.0 - cos(time));
-  float b = 1.0 - sin(g)/ sin(time);
+  float b = s(n, m) * 100000.;
 
-   gl_FragColor = vec4(sin(r), sin(g), b, 1.);
+   gl_FragColor = vec4(sin(r) * red, sin(g) * green, sin(b) * blue, 1.);
 
   //gl_FragColor = vec4(0., 1., 0.,1.);
 }

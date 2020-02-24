@@ -10,10 +10,14 @@ var draw = glslify('./draw.glsl'),
     vert = glslify('./vert.glsl'),
     gol  = glslify('./frag.glsl')
 
-//var simShader = glslify({frag: gol, vert: vert})
-//var drawShader = glslify({frag: draw, vert: vert})
 
-var dShader, upShader, state, current = 0, time = 0
+var dShader, upShader, state, current = 0, time = 0, guivar
+
+var guiVars = function(){
+    this.red = 1.5;
+    this.green = 1.5;
+    this.blue = 1.5;
+}
 
 shell.on("gl-init", function () {
     var gl = shell.gl
@@ -41,6 +45,12 @@ shell.on("gl-init", function () {
 
     //Set up vertex pointers
     dShader.attributes.a_position.location = upShader.attributes.a_position.location = 0
+
+    guivar = new guiVars();
+    var gui = new dat.GUI();
+    gui.add(guivar, 'red', 1.0, 2.0)
+    gui.add(guivar, 'green', 1.0, 2.0)
+    gui.add(guivar, 'blue', 0.5, 2.0)
 })
 
 shell.on("tick", function() {
@@ -53,6 +63,9 @@ shell.on("tick", function() {
     upShader.bind()
     upShader.uniforms.state = prevState.color[0].bind()
     upShader.uniforms.resolution = prevState.shape
+    upShader.uniforms.red = guivar.red
+    upShader.uniforms.green = guivar.green
+    upShader.uniforms.blue = guivar.blue
     console.log(current)
 
     fillScreen(gl)
